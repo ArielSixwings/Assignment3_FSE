@@ -1,8 +1,8 @@
 #ifndef MQTT_H
 #define MQTT_H
 
-void mqtt_start();
+void mqttStart();
 
-void mqtt_envia_mensagem(char * topico, char * mensagem);
+void mqttSendMessage(char * topic, char * message);
 
 #endif

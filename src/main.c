@@ -11,50 +11,43 @@
 #include "http_client.h"
 #include "mqtt.h"
 
-xSemaphoreHandle conexaoWifiSemaphore;
-xSemaphoreHandle conexaoMQTTSemaphore;
+xSemaphoreHandle connectionWifiSemaphore;
+xSemaphoreHandle connectionMQTTSemaphore;
 
-void conectadoWifi(void * params)
-{
-  while(true)
-  {
-    if(xSemaphoreTake(conexaoWifiSemaphore, portMAX_DELAY))
-    {
-      // Processamento Internet
-      mqtt_start();
-    }
-  }
+void connectedWifi(void * params){
+	while(true){
+		if(xSemaphoreTake(connectionWifiSemaphore, portMAX_DELAY)){
+			// Processamento Internet
+			mqttStart();
+		}
+	}
 }
 
-void trataComunicacaoComServidor(void * params)
-{
-  char mensagem[50];
-  if(xSemaphoreTake(conexaoMQTTSemaphore, portMAX_DELAY))
-  {
-    while(true)
-    {
-       float temperatura = 20.0 + (float)rand()/(float)(RAND_MAX/10.0);
-       sprintf(mensagem, "temperatura1: %f", temperatura);
-       mqtt_envia_mensagem("sensores/temperatura", mensagem);
-       vTaskDelay(3000 / portTICK_PERIOD_MS);
-    }
-  }
+void handleServerConnection(void * params){
+	char message[50];
+	if(xSemaphoreTake(connectionMQTTSemaphore, portMAX_DELAY)){
+		while(true){
+			float temperatura = 20.0 + (float)rand()/(float)(RAND_MAX/10.0);
+			sprintf(message, "temperatura1: %f", temperatura);
+			mqttSendMessage("sensores/temperatura", message);
+			vTaskDelay(3000 / portTICK_PERIOD_MS);
+		}
+	}
 }
 
-void app_main(void)
-{
-    // Inicializa o NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-    
-    conexaoWifiSemaphore = xSemaphoreCreateBinary();
-    conexaoMQTTSemaphore = xSemaphoreCreateBinary();
-    wifi_start();
+void app_main(void){
+		// Initialize the NVS
+		esp_err_t ret = nvs_flash_init();
+		if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+			ESP_ERROR_CHECK(nvs_flash_erase());
+			ret = nvs_flash_init();
+		}
+		ESP_ERROR_CHECK(ret);
+		
+		connectionWifiSemaphore = xSemaphoreCreateBinary();
+		connectionMQTTSemaphore = xSemaphoreCreateBinary();
+		wifiStart();
 
-    xTaskCreate(&conectadoWifi,  "Conexão ao MQTT", 4096, NULL, 1, NULL);
-    xTaskCreate(&trataComunicacaoComServidor, "Comunicação com Broker", 4096, NULL, 1, NULL);
+		xTaskCreate(&connectedWifi,  "Conexão ao MQTT", 4096, NULL, 1, NULL);
+		xTaskCreate(&handleServerConnection, "Comunicação com Broker", 4096, NULL, 1, NULL);
 }
