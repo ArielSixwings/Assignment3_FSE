@@ -70,7 +70,8 @@ static void mqttEventHandler(void *handler_args, esp_event_base_t base, int32_t 
 
 void mqttStart(){
     esp_mqtt_client_config_t mqtt_config = {
-        .uri = "mqtt://mqtt.eclipse.org",
+        .uri = "mqtt://164.41.98.25",
+        .username = "gWS6C6a1NWYMwVNelIbe",
     };
     client = esp_mqtt_client_init(&mqtt_config);
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqttEventHandler, client);
