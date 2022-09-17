@@ -15,6 +15,14 @@
 #include "driver/ledc.h"
 #include "driver/adc.h"
 
+
+static const adc_channel_t channel = ADC2_CHANNEL_2;
+static const adc_bits_width_t width = ADC_WIDTH_12Bit;
+
+// static const adc_atten_t atten = ADC_ATTEN_DB_0;
+// static const adc_unit_t unit = ADC_UNIT_2;
+
+#define HALL ADC2_CHANNEL_2
 #define HALL_EFFECT_GPIO 2
 
 #define RGB_LIGHT_RED_GPIO 21
@@ -33,6 +41,26 @@ typedef struct
 
 ledc_info_t ledc_ch[RGB_LED_CHANNEL_NUM];
 
+void testHall(){
+	gpio_pad_select_gpio(HALL_EFFECT_GPIO);
+	gpio_set_direction(HALL_EFFECT_GPIO, GPIO_MODE_INPUT);
+
+	// Configura o conversor AD
+	adc1_config_width(ADC_WIDTH_BIT_10);
+	adc1_config_channel_atten(HALL, ADC_ATTEN_MAX);
+	// adc2_config_channel_atten((adc2_channel_t)channel,atten);
+
+
+	int raw = 0;
+	for (size_t i = 0; i < 100; i++){
+		raw = 0;
+		adc2_get_raw((adc2_channel_t)channel, width,&raw);
+		printf("HALL EFFECT: %d\n", raw);
+		fflush(stdout);
+		vTaskDelay(200);
+	}
+
+}
 
 static void rgbInit(){
 	//RED
@@ -132,11 +160,11 @@ void handleServerConnection(void * params){
 	if(xSemaphoreTake(connectionMQTTSemaphore, portMAX_DELAY)){
 		while(true){
 
-			sprintf(jsonMessage, "{\"temperature\": %d}", DHT11_read().temperature);
+			sprintf(jsonMessage, "{\"Temperature\": %d}", DHT11_read().temperature);
 			mqttSendMessage("v1/devices/me/telemetry", jsonMessage);
 
 			sprintf(jsonMessage, "{\"Humidity\": %d}", DHT11_read().humidity);
-			mqttSendMessage("v1/devices/me/telemetry", jsonMessage);
+			mqttSendMessage("v1/devices/me/attributes", jsonMessage);
 
 			vTaskDelay(1000 / portTICK_PERIOD_MS);
 		}
@@ -144,7 +172,8 @@ void handleServerConnection(void * params){
 }
 
 void app_main(void){
-		testRgb();
+		// testHall();
+		// testRgb();
     	DHT11_init(GPIO_NUM_23);
 		// Initialize the NVS
 		esp_err_t ret = nvs_flash_init();

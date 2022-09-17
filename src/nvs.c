@@ -7,24 +7,15 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 
-#inclu
 
-int32_t le_valor_nvs()
+int32_t readNvsValue()
 {
-    // Inicia o acesso à partição padrão nvs
     ESP_ERROR_CHECK(nvs_flash_init());
 
-    // Inicia o acesso à partição personalizada
-    // ESP_ERROR_CHECK(nvs_flash_init_partition("DadosNVS"));
+    int32_t value = 0;
+    nvs_handle standardPartitionHandler;
 
-    int32_t valor = 0;
-    nvs_handle particao_padrao_handle;
-
-    // Abre o acesso à partição nvs
-    esp_err_t res_nvs = nvs_open("armazenamento", NVS_READONLY, &particao_padrao_handle);
-
-    // Abre o acesso à partição DadosNVS
-    // esp_err_t res_nvs = nvs_open_from_partition("DadosNVS", "armazenamento", NVS_READONLY, &particao_padrao_handle);
+    esp_err_t res_nvs = nvs_open("armazenamento", NVS_READONLY, &standardPartitionHandler);
 
     if(res_nvs == ESP_ERR_NVS_NOT_FOUND)
     {
@@ -32,15 +23,15 @@ int32_t le_valor_nvs()
     }
     else
     {
-        esp_err_t res = nvs_get_i32(particao_padrao_handle, "contador", &valor);
+        esp_err_t res = nvs_get_i32(standardPartitionHandler, "contador", &value);
 
         switch (res)
         {
         case ESP_OK:
-            printf("Valor armazenado: %d\n", valor);
+            printf("value armazenado: %d\n", value);
             break;
         case ESP_ERR_NOT_FOUND:
-            ESP_LOGE("NVS", "Valor não encontrado");
+            ESP_LOGE("NVS", "value não encontrado");
             return -1;
         default:
             ESP_LOGE("NVS", "Erro ao acessar o NVS (%s)", esp_err_to_name(res));
@@ -48,30 +39,28 @@ int32_t le_valor_nvs()
             break;
         }
 
-        nvs_close(particao_padrao_handle);
+        nvs_close(standardPartitionHandler);
     }
-    return valor;
+    return value;
 }
 
-void grava_valor_nvs(int32_t valor)
+void writeNvsValue(int32_t value)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
-    // ESP_ERROR_CHECK(nvs_flash_init_partition("DadosNVS"));
 
-    nvs_handle particao_padrao_handle;
+    nvs_handle standardPartitionHandler;
 
-    esp_err_t res_nvs = nvs_open("armazenamento", NVS_READWRITE, &particao_padrao_handle);
-    // esp_err_t res_nvs = nvs_open_from_partition("DadosNVS", "armazenamento", NVS_READWRITE, &particao_padrao_handle);
+    esp_err_t res_nvs = nvs_open("armazenamento", NVS_READWRITE, &standardPartitionHandler);
 
     if(res_nvs == ESP_ERR_NVS_NOT_FOUND)
     {
         ESP_LOGE("NVS", "Namespace: armazenamento, não encontrado");
     }
-    esp_err_t res = nvs_set_i32(particao_padrao_handle, "contador", valor + 1);
+    esp_err_t res = nvs_set_i32(standardPartitionHandler, "contador", value + 1);
     if(res != ESP_OK)
     {
         ESP_LOGE("NVS", "Não foi possível escrever no NVS (%s)", esp_err_to_name(res));
     }
-    nvs_commit(particao_padrao_handle);
-    nvs_close(particao_padrao_handle);
+    nvs_commit(standardPartitionHandler);
+    nvs_close(standardPartitionHandler);
 }

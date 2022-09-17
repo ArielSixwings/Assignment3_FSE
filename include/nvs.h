@@ -1,8 +1,7 @@
-#ifndef NV_H
-#define MQTT_H
+#ifndef NVS_H
+#define NVS_H
 
-void mqttStart();
-
-void mqttSendMessage(char * topic, char * message);
+int32_t readNvsValue();
+void writeNvsValue(int32_t value);
 
 #endif
