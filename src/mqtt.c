@@ -17,7 +17,6 @@
 
 #include "esp_log.h"
 #include "mqtt_client.h"
-
 #include "mqtt.h"
 
 #define TAG "MQTT"
@@ -28,12 +27,13 @@ esp_mqtt_client_handle_t client;
 static esp_err_t mqttEventHandlerCb(esp_mqtt_event_handle_t event){
     esp_mqtt_client_handle_t client = event->client;
     int msg_id;
-    
+    // const char *function;
+
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             xSemaphoreGive(connectionMQTTSemaphore);
-            msg_id = esp_mqtt_client_subscribe(client, "servidor/resposta", 0);
+            msg_id = esp_mqtt_client_subscribe(client, "v1/devices/me/rpc/request/+", 0);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -52,6 +52,12 @@ static esp_err_t mqttEventHandlerCb(esp_mqtt_event_handle_t event){
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
+            // json_scanf(event->data, event->data_len, "{method: %Q}", &function);
+            // if(strcmp(function, "setRedLed") == 0) printf("setRedLed\n");
+            // else if(strcmp(function, "setBlueLed") == 0) printf("setBlueLed\n");
+            // else if(strcmp(function, "setGreenLed") == 0) printf("setGreenLed\n");
+            // else printf("function %s not found\n", function);
+            // free(function);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -79,6 +85,6 @@ void mqttStart(){
 }
 
 void mqttSendMessage(char * topic, char * message){
-    int message_id = esp_mqtt_client_publish(client, topic, message, 0, 2, 0);
+    int message_id = esp_mqtt_client_publish(client, topic, message, 0, 1, 0);
     ESP_LOGI(TAG, "Mesnagem enviada, ID: %d", message_id);
 }

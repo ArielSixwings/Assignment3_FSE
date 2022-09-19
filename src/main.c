@@ -155,16 +155,19 @@ void connectedWifi(void * params){
 }
 
 void handleServerConnection(void * params){
-	// char message[50];
 	char jsonMessage[200];
+	int temperature = -1, humidity = -1;
+
 	if(xSemaphoreTake(connectionMQTTSemaphore, portMAX_DELAY)){
 		while(true){
+			while (temperature < 0) temperature = DHT11_read().temperature;
+			while (humidity < 0) humidity = DHT11_read().humidity;
 
-			sprintf(jsonMessage, "{\"Temperature\": %d}", DHT11_read().temperature);
+			sprintf(jsonMessage, "{\"Temperature\": %d}", temperature);
 			mqttSendMessage("v1/devices/me/telemetry", jsonMessage);
 
-			sprintf(jsonMessage, "{\"Humidity\": %d}", DHT11_read().humidity);
-			mqttSendMessage("v1/devices/me/attributes", jsonMessage);
+			sprintf(jsonMessage, "{\"Humidity\": %d}", humidity);
+			mqttSendMessage("v1/devices/me/telemetry", jsonMessage);
 
 			vTaskDelay(1000 / portTICK_PERIOD_MS);
 		}
@@ -182,8 +185,6 @@ void app_main(void){
 			ret = nvs_flash_init();
 		}
 		ESP_ERROR_CHECK(ret);
-
-		printf("======= Testando sensor DHT11 =======\nTemp: %d\nUmidade: %d\n", DHT11_read().temperature, DHT11_read().humidity);
 
 		connectionWifiSemaphore = xSemaphoreCreateBinary();
 		connectionMQTTSemaphore = xSemaphoreCreateBinary();
