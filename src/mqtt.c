@@ -17,6 +17,7 @@
 
 #include "esp_log.h"
 #include "mqtt_client.h"
+#include "frozen.c"
 #include "mqtt.h"
 
 #define TAG "MQTT"
@@ -26,8 +27,9 @@ esp_mqtt_client_handle_t client;
 
 static esp_err_t mqttEventHandlerCb(esp_mqtt_event_handle_t event){
     esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
-    // const char *function;
+    int msg_id, temp;
+    int r, g, b;
+    char function[12];
 
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
@@ -52,12 +54,18 @@ static esp_err_t mqttEventHandlerCb(esp_mqtt_event_handle_t event){
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
-            // json_scanf(event->data, event->data_len, "{method: %Q}", &function);
-            // if(strcmp(function, "setRedLed") == 0) printf("setRedLed\n");
-            // else if(strcmp(function, "setBlueLed") == 0) printf("setBlueLed\n");
-            // else if(strcmp(function, "setGreenLed") == 0) printf("setGreenLed\n");
-            // else printf("function %s not found\n", function);
-            // free(function);
+            json_scanf(event->data, event->data_len, "{method: %s, params: %d}", &function, &temp);
+            if(strcmp(function, "setRedLed") == 0) {
+                r = temp;
+                printf("setRedLed: %d\n", r);
+            } else if(strcmp(function, "setBlueLed") == 0){
+                b = temp;
+                printf("setBlueLed: %d\n", b);
+            } else if(strcmp(function, "setGreenLed") == 0) {
+                g = temp;
+                printf("setGreenLed: %d\n", g);
+            }
+            else printf("function %s not found\n", function);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
