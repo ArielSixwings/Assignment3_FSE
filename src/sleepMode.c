@@ -5,6 +5,7 @@ void lightSleepInit() {
         gpio_pad_select_gpio(WAKE_UP_BUTTON);
         gpio_set_direction(WAKE_UP_BUTTON, GPIO_MODE_INPUT);
         gpio_wakeup_enable(WAKE_UP_BUTTON, GPIO_INTR_LOW_LEVEL);
+        esp_sleep_enable_gpio_wakeup();
         setSleepMode();
     }
 }
@@ -18,15 +19,10 @@ void setSleepMode() {
     // Entra em modo Light Sleep
     esp_light_sleep_start();
 
-    while (true)
-    {
-        if (rtc_gpio_get_level(WAKE_UP_BUTTON) == 0)
-        {
-            printf("Aguardando soltar o botão ... \n");
-            do
-            {
-                vTaskDelay(pdMS_TO_TICKS(10));
-            } while (rtc_gpio_get_level(WAKE_UP_BUTTON) == 0);
-        }
+    while (true) {
+        if (rtc_gpio_get_level(WAKE_UP_BUTTON) == 0) break;
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
+
+    printf("Saindo do modo Light Sleep\n");
 }
