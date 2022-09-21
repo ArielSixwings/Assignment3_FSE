@@ -2,20 +2,6 @@
 #include "ledRgb.h"
 #include <stdint.h>
 
-#define RGB_LIGHT_RED_GPIO 21
-#define RGB_LIGHT_GREEN_GPIO 19
-#define RGB_LIGHT_BLUE_GPIO 18
-
-#define RGB_LED_CHANNEL_NUM 3
-
-typedef struct
-{
-	int channel;
-	int gpio;
-	int mode;
-	int timer_index;
-}ledc_info_t;
-
 ledc_info_t ledc_ch[RGB_LED_CHANNEL_NUM];
 
 void rgbInit(){
@@ -76,25 +62,14 @@ void setColor(uint8_t red, uint8_t green, uint8_t blue){
 	ledc_update_duty(ledc_ch[2].mode, ledc_ch[2].channel);
 }
 
-// void testRgb(){
-// 	rgbInit();
-// 	int r = 0;
-// 	int g = 0;
-// 	int b = 0;
+void setGlobalColor(){
+	//values shoud be 0 to 255
+	ledc_set_duty(ledc_ch[0].mode, ledc_ch[0].channel, GRed);
+	ledc_update_duty(ledc_ch[0].mode, ledc_ch[0].channel);
 
-// 	for ( r = 0; r < 256; r++){
-// 		setColor(r,g,b);
-// 		vTaskDelay(10);
-// 	}
-// 	for ( g = 0; g < 256; g++)
-// 	{
-// 		setColor(r,g,b);
-// 		vTaskDelay(10);
-// 	}
-// 	for ( b = 0; b < 256; b++)
-// 	{
-// 		setColor(r,g,b);
-// 		vTaskDelay(10);
-// 	}
+	ledc_set_duty(ledc_ch[1].mode, ledc_ch[1].channel, GGreen);
+	ledc_update_duty(ledc_ch[1].mode, ledc_ch[1].channel);
 
-// }
+	ledc_set_duty(ledc_ch[2].mode, ledc_ch[2].channel, GBlue);
+	ledc_update_duty(ledc_ch[2].mode, ledc_ch[2].channel);
+}

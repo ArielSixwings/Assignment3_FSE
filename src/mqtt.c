@@ -26,10 +26,38 @@
 extern xSemaphoreHandle connectionMQTTSemaphore;
 esp_mqtt_client_handle_t client;
 
+void setLocalState(char *function, char value){
+    if(strcmp(function, "setRedLed") == 0) GRed = value;
+    else if(strcmp(function, "setBlueLed") == 0) GBlue = value;
+    else if(strcmp(function, "setGreenLed") == 0) GGreen = value;
+    else {
+        printf("Function not found");
+        return;
+    }
+
+    setColor(GRed, GGreen, GBlue);
+}
+
+void sendStoredState(char *path, int pathLength, char *function){
+    char topic[40], state[4];
+    sprintf(topic, "v1/devices/me/rpc/response/%.*s", pathLength - 26, path + 26);
+
+    if(strstr(function, "RedLed") != NULL)
+        sprintf(state, "%d", GRed);
+    else if(strstr(function, "GreenLed") != NULL)
+        sprintf(state, "%d", GGreen);
+    else if(strstr(function, "BlueLed") != NULL)
+        sprintf(state, "%d", GBlue);
+    else {
+        printf ("Function not found");
+        return;
+    }
+    mqttSendMessage(topic, state);
+}
+
 static esp_err_t mqttEventHandlerCb(esp_mqtt_event_handle_t event){
     esp_mqtt_client_handle_t client = event->client;
     int msg_id, temp;
-    int r = 0, g = 0, b = 0;
     char function[12];
 
     switch (event->event_id) {
@@ -55,20 +83,12 @@ static esp_err_t mqttEventHandlerCb(esp_mqtt_event_handle_t event){
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
             json_scanf(event->data, event->data_len, "{method: %s, params: %d}", &function, &temp);
-            if(strcmp(function, "setRedLed") == 0) {
-                r = temp;
-                printf("setRedLed----\nR: %d\tG: %d\tB: %d\\n", r, g, b);
-                setColor(r, g, b);
-            } else if(strcmp(function, "setBlueLed") == 0){
-                b = temp;
-                printf("setBlueLed----\nR: %d\tG: %d\tB: %d\\n", r, g, b);
-                setColor(r, g, b);
-            } else if(strcmp(function, "setGreenLed") == 0) {
-                g = temp;
-                printf("setGreenLed----\nR: %d\tG: %d\tB: %d\\n", r, g, b);
-                setColor(r, g, b);
-            }
-            else printf("function %s not found\n", function);
+            if(strstr(function, "set") != NULL)
+                setLocalState(function, temp);
+            else if(strstr(function, "get") != NULL)
+                sendStoredState(event->topic, event->topic_len, function);
+            else
+                printf("function %s not found\n", function);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
