@@ -15,7 +15,8 @@
 #include "leds.h"
 #include "driver/ledc.h"
 #include "hall.h"
-#include "lightSleep.h"
+#include "sleepMode.h"
+#include "mynvs.h"
 
 xSemaphoreHandle connectionWifiSemaphore;
 xSemaphoreHandle connectionMQTTSemaphore;
@@ -32,7 +33,6 @@ void led_blink(){
 		gpio_set_level(LED_PIN,1);
 		vTaskDelay(1000/portTICK_RATE_MS);
 	}
-	
 }
 
 void connectedWifi(void * params){
@@ -65,28 +65,35 @@ void handleServerConnection(void * params){
 }
 
 void app_main(void){
-		presentHall();
-		rgbInit();
-		initInternalLed();
-		lightSleepInit();
-    	DHT11_init(GPIO_NUM_23);
+		// lightSleepInit();
+		// presentHall();
+		// rgbInit();
+		// initInternalLed();
+		// lightSleepInit();
+    	// DHT11_init(GPIO_NUM_23);
 
-		// Initialize the NVS
-		esp_err_t ret = nvs_flash_init();
-		if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-			ESP_ERROR_CHECK(nvs_flash_erase());
-			ret = nvs_flash_init();
-		}
-		ESP_ERROR_CHECK(ret);
+		// // Initialize the NVS
+		// esp_err_t ret = nvs_flash_init();
+		// if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+		// 	ESP_ERROR_CHECK(nvs_flash_erase());
+		// 	ret = nvs_flash_init();
+		// }
+		// ESP_ERROR_CHECK(ret);
 
-		connectionWifiSemaphore = xSemaphoreCreateBinary();
-		connectionMQTTSemaphore = xSemaphoreCreateBinary();
-		wifiStart();
+		// connectionWifiSemaphore = xSemaphoreCreateBinary();
+		// connectionMQTTSemaphore = xSemaphoreCreateBinary();
+		// wifiStart();
 
-		// xTaskCreate(&presentHall, "Apresenta o Hall", 4096, NULL, 1, NULL);
+		// // xTaskCreate(&presentHall, "Apresenta o Hall", 4096, NULL, 1, NULL);
 
-		// xTaskCreate(&led_blink,  "Blink", 512, NULL, 5, NULL);
-		xTaskCreate(&connectedWifi,  "Conexão ao MQTT", 4096, NULL, 1, NULL);
-		xTaskCreate(&handleServerConnection, "Comunicação com Broker", 4096, NULL, 1, NULL);
-
+		// // xTaskCreate(&led_blink,  "Blink", 512, NULL, 5, NULL);
+		// xTaskCreate(&connectedWifi,  "Conexão ao MQTT", 4096, NULL, 1, NULL);
+		// xTaskCreate(&handleServerConnection, "Comunicação com Broker", 4096, NULL, 1, NULL);
+		// vTaskDelay(10000 / portTICK_PERIOD_MS);
+		// for (size_t i = 0; i < 10; i++)
+		// {
+		// 	writeNvsValue(i,"SAVE_RED");
+		// 	readNvsValue("SAVE_RED");
+		// 	vTaskDelay(1000 / portTICK_PERIOD_MS);
+		// }
 }
