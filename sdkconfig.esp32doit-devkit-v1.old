@@ -139,7 +139,7 @@ CONFIG_ESP_MAXIMUM_RETRY=5
 #
 # Configuração de Modo Bateria
 #
-CONFIG_LOW_POWER=01
+CONFIG_LOW_POWER=1
 # end of Configuração de Modo Bateria
 
 #

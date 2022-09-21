@@ -21,42 +21,52 @@
 #include "mqtt.h"
 #include "hall.h"
 #include "leds.h"
+#include "mynvs.h"
 
 #define TAG "MQTT"
+
+#define TOPIC_LENGTH 26
 
 extern xSemaphoreHandle connectionMQTTSemaphore;
 esp_mqtt_client_handle_t client;
 
 void setLocalState(char *function, char value){
-    if(strcmp(function, "setRedLed") == 0) GRed = value;
-    else if(strcmp(function, "setBlueLed") == 0) GBlue = value;
-    else if(strcmp(function, "setGreenLed") == 0) GGreen = value;
-    else if(strcmp(function, "setPwmValue") == 0) setIntensity(value);
-    else {
-        printf("Function not found");
-        return;
+    if(strcmp(function, "setRedLed") == 0){
+        GRed = value;
+        writeNvsValue(value,"RED");
     }
-
+    if(strcmp(function, "setBlueLed") == 0){
+        GBlue = value;
+        writeNvsValue(value,"BLUE");
+    }
+    if(strcmp(function, "setGreenLed") == 0){
+        GGreen = value;
+        writeNvsValue(value,"GREEN");
+    }
+    if(strcmp(function, "setPwmValue") == 0){
+        setIntensity(value);
+        writeNvsValue(value,"PWM");
+    }
     setColor(GRed, GGreen, GBlue);
 }
 
 void sendStoredState(char *path, int pathLength, char *function){
     char topic[40], state[4];
-    sprintf(topic, "v1/devices/me/rpc/response/%.*s", pathLength - 26, path + 26);
-
+    sprintf(topic, "v1/devices/me/rpc/response/%.*s", pathLength - TOPIC_LENGTH, path + TOPIC_LENGTH);
 
     if(strstr(function, "RedLed") != NULL)
-        sprintf(state, "%d", GRed);
+        sprintf(state, "%d", readNvsValue("RED"));
     else if(strstr(function, "GreenLed") != NULL)
-        sprintf(state, "%d", GGreen);
+        sprintf(state, "%d", readNvsValue("GREEN"));
     else if(strstr(function, "BlueLed") != NULL)
-        sprintf(state, "%d", GBlue);
+        sprintf(state, "%d", readNvsValue("BLUE"));
     else if(strstr(function, "PwmValue") != NULL)
-        sprintf(state, "%d", 0);
+        sprintf(state, "%d", readNvsValue("PWM"));
     else {
         printf ("Function not found");
         return;
     }
+    printf("TOPIC=%s\tSTATE:%s", topic, state);
     mqttSendMessage(topic, state);
 }
 

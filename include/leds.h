@@ -3,9 +3,11 @@
 
 #include <stdint.h>
 
+
 static uint8_t GRed = 0;
 static uint8_t GGreen = 0;
 static uint8_t GBlue = 0;
+
 
 #define INTERNAL_LIGHT_GPIO 2
 
@@ -28,5 +30,6 @@ void setColor(uint8_t red, uint8_t green, uint8_t blue);
 
 void initInternalLed();
 void setIntensity(uint8_t intensity);
+void getGlobal(uint8_t red, uint8_t green, uint8_t blue);
 
 #endif

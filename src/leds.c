@@ -5,6 +5,11 @@
 ledc_info_t ledc_ch[RGB_LED_CHANNEL_NUM];
 ledc_info_t internal_led;
 
+void getGlobal(uint8_t red, uint8_t green, uint8_t blue){
+	GRed = red;
+	GGreen = green;
+	GBlue = blue;
+}
 void initInternalLed(){
 	internal_led.channel = LEDC_CHANNEL_0;
 	internal_led.gpio = INTERNAL_LIGHT_GPIO;
