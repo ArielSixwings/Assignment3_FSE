@@ -131,11 +131,16 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 # Configuração do Wifi Configuration
 #
-CONFIG_ESP_WIFI_SSID="Serafins"
-CONFIG_ESP_WIFI_PASSWORD="30365697"
+CONFIG_ESP_WIFI_SSID="Fernando"
+CONFIG_ESP_WIFI_PASSWORD="d260715*"
 CONFIG_ESP_MAXIMUM_RETRY=5
-CONFIG_LOW_POWER=0
 # end of Configuração do Wifi Configuration
+
+#
+# Configuração de Modo Bateria
+#
+CONFIG_LOW_POWER=1
+# end of Configuração de Modo Bateria
 
 #
 # Compiler options

@@ -15,7 +15,8 @@
 #include "leds.h"
 #include "driver/ledc.h"
 #include "hall.h"
-#include "lightSleep.h"
+#include "sleepMode.h"
+#include "mynvs.h"
 
 xSemaphoreHandle connectionWifiSemaphore;
 xSemaphoreHandle connectionMQTTSemaphore;
@@ -32,7 +33,6 @@ void led_blink(){
 		gpio_set_level(LED_PIN,1);
 		vTaskDelay(1000/portTICK_RATE_MS);
 	}
-	
 }
 
 void connectedWifi(void * params){
@@ -64,29 +64,60 @@ void handleServerConnection(void * params){
 	}
 }
 
+void getLastState(){
+	initInternalLed();
+	rgbInit();
+
+	int value = 0;
+
+	value = readNvsValue("RED");
+	if(value > 0) GRed = value;
+	printf("RED: %d\n",GRed);
+
+	value = readNvsValue("GREEN");
+	if(value > 0) GGreen = value;
+	printf("GGreen: %d\n",GGreen);
+
+	value = readNvsValue("BLUE");
+	if(value > 0) GBlue = value;
+	printf("GBlue: %d\n",GBlue);
+
+	value = readNvsValue("PWM");
+	if(value > 0 ){
+		setIntensity(value);
+	} else{
+		setIntensity(0);
+	}
+	// printf("PWM: %d\n",PWM);
+
+	fflush(stdout);
+	setColor(GRed, GGreen, GBlue);
+	getGlobal(GRed, GGreen, GBlue);
+
+}
 void app_main(void){
-		presentHall();
-		rgbInit();
-		initInternalLed();
-		lightSleepInit();
-    	DHT11_init(GPIO_NUM_23);
+	// Initialize the NVS
+	esp_err_t ret = nvs_flash_init();
+	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+		ESP_ERROR_CHECK(nvs_flash_erase());
+		ret = nvs_flash_init();
+	}
+	ESP_ERROR_CHECK(ret);
 
-		// Initialize the NVS
-		esp_err_t ret = nvs_flash_init();
-		if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-			ESP_ERROR_CHECK(nvs_flash_erase());
-			ret = nvs_flash_init();
-		}
-		ESP_ERROR_CHECK(ret);
+	getLastState();
+	lightSleepInit();
+	// presentHall();
+    DHT11_init(GPIO_NUM_23);
 
-		connectionWifiSemaphore = xSemaphoreCreateBinary();
-		connectionMQTTSemaphore = xSemaphoreCreateBinary();
-		wifiStart();
 
-		// xTaskCreate(&presentHall, "Apresenta o Hall", 4096, NULL, 1, NULL);
+	connectionWifiSemaphore = xSemaphoreCreateBinary();
+	connectionMQTTSemaphore = xSemaphoreCreateBinary();
+	wifiStart();
 
-		// xTaskCreate(&led_blink,  "Blink", 512, NULL, 5, NULL);
-		xTaskCreate(&connectedWifi,  "Conexão ao MQTT", 4096, NULL, 1, NULL);
-		xTaskCreate(&handleServerConnection, "Comunicação com Broker", 4096, NULL, 1, NULL);
+	// xTaskCreate(&presentHall, "Apresenta o Hall", 4096, NULL, 1, NULL);
+
+	// xTaskCreate(&led_blink,  "Blink", 512, NULL, 5, NULL);
+	xTaskCreate(&connectedWifi,  "Conexão ao MQTT", 4096, NULL, 1, NULL);
+	xTaskCreate(&handleServerConnection, "Comunicação com Broker", 4096, NULL, 1, NULL);
 
 }

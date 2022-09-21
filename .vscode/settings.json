@@ -1,3 +1,7 @@
 {
-    "cmake.sourceDirectory": "${workspaceFolder}/home/ilus/.platformio/packages/framework-espidf"
+    "cmake.sourceDirectory": "${workspaceFolder}/home/ilus/.platformio/packages/framework-espidf",
+    "files.associations": {
+        "freertos.h": "c",
+        "stdint.h": "c"
+    }
 }
