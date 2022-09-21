@@ -7,6 +7,7 @@
 
 static const adc_channel_t channel = ADC2_CHANNEL_2;
 static const adc_bits_width_t width = ADC_WIDTH_12Bit;
+
 static int raw = 0;
 
 #define HALL ADC2_CHANNEL_2

@@ -12,14 +12,28 @@
 #include "wifi.h"
 #include "http_client.h"
 #include "mqtt.h"
-#include "ledRgb.h"
+#include "leds.h"
 #include "driver/ledc.h"
-// #include "hall.h"
+#include "hall.h"
+#include "lightSleep.h"
 
 xSemaphoreHandle connectionWifiSemaphore;
 xSemaphoreHandle connectionMQTTSemaphore;
 
-TaskHandle_t hallHandler = NULL;
+#define LED_PIN 2
+
+void led_blink(){
+	gpio_pad_select_gpio(LED_PIN);
+	gpio_set_direction(LED_PIN,GPIO_MODE_OUTPUT);
+
+	while (1){
+		gpio_set_level(LED_PIN,0);
+		vTaskDelay(1000/portTICK_RATE_MS);
+		gpio_set_level(LED_PIN,1);
+		vTaskDelay(1000/portTICK_RATE_MS);
+	}
+	
+}
 
 void connectedWifi(void * params){
 	while(true){
@@ -51,8 +65,10 @@ void handleServerConnection(void * params){
 }
 
 void app_main(void){
-		// presentHall();
+		presentHall();
 		rgbInit();
+		initInternalLed();
+		lightSleepInit();
     	DHT11_init(GPIO_NUM_23);
 
 		// Initialize the NVS
@@ -68,6 +84,9 @@ void app_main(void){
 		wifiStart();
 
 		// xTaskCreate(&presentHall, "Apresenta o Hall", 4096, NULL, 1, NULL);
+
+		// xTaskCreate(&led_blink,  "Blink", 512, NULL, 5, NULL);
 		xTaskCreate(&connectedWifi,  "Conexão ao MQTT", 4096, NULL, 1, NULL);
 		xTaskCreate(&handleServerConnection, "Comunicação com Broker", 4096, NULL, 1, NULL);
+
 }

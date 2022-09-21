@@ -7,6 +7,8 @@ static uint8_t GRed = 0;
 static uint8_t GGreen = 0;
 static uint8_t GBlue = 0;
 
+#define INTERNAL_LIGHT_GPIO 2
+
 #define RGB_LIGHT_RED_GPIO 21
 #define RGB_LIGHT_GREEN_GPIO 19
 #define RGB_LIGHT_BLUE_GPIO 18
@@ -23,5 +25,8 @@ typedef struct
 
 void rgbInit();
 void setColor(uint8_t red, uint8_t green, uint8_t blue);
+
+void initInternalLed();
+void setIntensity(uint8_t intensity);
 
 #endif

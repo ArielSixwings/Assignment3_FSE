@@ -19,7 +19,8 @@
 #include "frozen.c"
 #include "mqtt_client.h"
 #include "mqtt.h"
-#include "ledRgb.h"
+#include "hall.h"
+#include "leds.h"
 
 #define TAG "MQTT"
 
@@ -30,6 +31,7 @@ void setLocalState(char *function, char value){
     if(strcmp(function, "setRedLed") == 0) GRed = value;
     else if(strcmp(function, "setBlueLed") == 0) GBlue = value;
     else if(strcmp(function, "setGreenLed") == 0) GGreen = value;
+    else if(strcmp(function, "setPwmValue") == 0) setIntensity(value);
     else {
         printf("Function not found");
         return;
@@ -42,12 +44,15 @@ void sendStoredState(char *path, int pathLength, char *function){
     char topic[40], state[4];
     sprintf(topic, "v1/devices/me/rpc/response/%.*s", pathLength - 26, path + 26);
 
+
     if(strstr(function, "RedLed") != NULL)
         sprintf(state, "%d", GRed);
     else if(strstr(function, "GreenLed") != NULL)
         sprintf(state, "%d", GGreen);
     else if(strstr(function, "BlueLed") != NULL)
         sprintf(state, "%d", GBlue);
+    else if(strstr(function, "PwmValue") != NULL)
+        sprintf(state, "%d", 0);
     else {
         printf ("Function not found");
         return;
