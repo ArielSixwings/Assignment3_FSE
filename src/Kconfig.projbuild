@@ -19,7 +19,7 @@ menu "Configuração do Wifi Configuration"
             Configure o valor máximo de tentativas de conexão.
 
     config LOW_POWER
-        int "Is lowe power mode"
+        int "Is low power mode"
         default 0
         range 0 1
 endmenu

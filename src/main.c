@@ -12,138 +12,28 @@
 #include "wifi.h"
 #include "http_client.h"
 #include "mqtt.h"
+#include "leds.h"
 #include "driver/ledc.h"
-#include "driver/adc.h"
+#include "hall.h"
+#include "lightSleep.h"
 
-
-static const adc_channel_t channel = ADC2_CHANNEL_2;
-static const adc_bits_width_t width = ADC_WIDTH_12Bit;
-
-// static const adc_atten_t atten = ADC_ATTEN_DB_0;
-// static const adc_unit_t unit = ADC_UNIT_2;
-
-#define HALL ADC2_CHANNEL_2
-#define HALL_EFFECT_GPIO 2
-
-#define RGB_LIGHT_RED_GPIO 21
-#define RGB_LIGHT_GREEN_GPIO 19
-#define RGB_LIGHT_BLUE_GPIO 18
-
-#define RGB_LED_CHANNEL_NUM 3
-
-typedef struct
-{
-	int channel;
-	int gpio;
-	int mode;
-	int timer_index;
-}ledc_info_t;
-
-ledc_info_t ledc_ch[RGB_LED_CHANNEL_NUM];
-
-void testHall(){
-	gpio_pad_select_gpio(HALL_EFFECT_GPIO);
-	gpio_set_direction(HALL_EFFECT_GPIO, GPIO_MODE_INPUT);
-
-	// Configura o conversor AD
-	adc1_config_width(ADC_WIDTH_BIT_10);
-	adc1_config_channel_atten(HALL, ADC_ATTEN_MAX);
-	// adc2_config_channel_atten((adc2_channel_t)channel,atten);
-
-
-	int raw = 0;
-	for (size_t i = 0; i < 100; i++){
-		raw = 0;
-		adc2_get_raw((adc2_channel_t)channel, width,&raw);
-		printf("HALL EFFECT: %d\n", raw);
-		fflush(stdout);
-		vTaskDelay(200);
-	}
-
-}
-
-static void rgbInit(){
-	//RED
-	ledc_ch[0].channel = LEDC_CHANNEL_0;
-	ledc_ch[0].gpio = RGB_LIGHT_RED_GPIO;
-	ledc_ch[0].mode = LEDC_HIGH_SPEED_MODE;
-	ledc_ch[0].timer_index = LEDC_TIMER_0;
-
-	//GREEN
-	ledc_ch[1].channel = LEDC_CHANNEL_1;
-	ledc_ch[1].gpio = RGB_LIGHT_GREEN_GPIO;
-	ledc_ch[1].mode = LEDC_HIGH_SPEED_MODE;
-	ledc_ch[1].timer_index = LEDC_TIMER_0;
-
-	//BLUE
-	ledc_ch[2].channel = LEDC_CHANNEL_2;
-	ledc_ch[2].gpio = RGB_LIGHT_BLUE_GPIO;
-	ledc_ch[2].mode = LEDC_HIGH_SPEED_MODE;
-	ledc_ch[2].timer_index = LEDC_TIMER_0;
-
-	//CONDIGURE TIMER 0
-	ledc_timer_config_t ledc_timer = {
-		.duty_resolution =LEDC_TIMER_8_BIT,
-		.freq_hz = 100,
-		.speed_mode = LEDC_HIGH_SPEED_MODE,
-		.timer_num = LEDC_TIMER_0
-	};
-	ledc_timer_config(&ledc_timer);
-
-	//Configure channels
-
-	for (int rgb_ch = 0; rgb_ch < RGB_LED_CHANNEL_NUM; rgb_ch++){
-
-		ledc_channel_config_t ledc_channel = {
-			.channel = ledc_ch[rgb_ch].channel,
-			.duty = 0,
-			.hpoint = 0,
-			.gpio_num = ledc_ch[rgb_ch].gpio,
-			.intr_type = LEDC_INTR_DISABLE,
-			.speed_mode = ledc_ch[rgb_ch].mode,
-			.timer_sel =ledc_ch[rgb_ch].timer_index,
-		};
-		ledc_channel_config(&ledc_channel);
-	}
-
-}
-
-static void setColor(uint8_t red, uint8_t green, uint8_t blue){
-	//values shoud be 0 to 255
-	ledc_set_duty(ledc_ch[0].mode, ledc_ch[0].channel, red);
-	ledc_update_duty(ledc_ch[0].mode, ledc_ch[0].channel);
-
-	ledc_set_duty(ledc_ch[1].mode, ledc_ch[1].channel, green);
-	ledc_update_duty(ledc_ch[1].mode, ledc_ch[1].channel);
-
-	ledc_set_duty(ledc_ch[2].mode, ledc_ch[2].channel, blue);
-	ledc_update_duty(ledc_ch[2].mode, ledc_ch[2].channel);
-}
-
-void testRgb(){
-	rgbInit();
-	int r = 0;
-	int g = 0;
-	int b = 0;
-
-	for ( r = 0; r < 256; r++){
-		setColor(r,g,b);
-		vTaskDelay(10);
-	}
-	for ( g = 0; g < 256; g++)
-	{
-		setColor(r,g,b);
-		vTaskDelay(10);
-	}
-	for ( b = 0; b < 256; b++)
-	{
-		setColor(r,g,b);
-		vTaskDelay(10);
-	}
-
-}
 xSemaphoreHandle connectionWifiSemaphore;
 xSemaphoreHandle connectionMQTTSemaphore;
+
+#define LED_PIN 2
+
+void led_blink(){
+	gpio_pad_select_gpio(LED_PIN);
+	gpio_set_direction(LED_PIN,GPIO_MODE_OUTPUT);
+
+	while (1){
+		gpio_set_level(LED_PIN,0);
+		vTaskDelay(1000/portTICK_RATE_MS);
+		gpio_set_level(LED_PIN,1);
+		vTaskDelay(1000/portTICK_RATE_MS);
+	}
+	
+}
 
 void connectedWifi(void * params){
 	while(true){
@@ -175,9 +65,12 @@ void handleServerConnection(void * params){
 }
 
 void app_main(void){
-		// testHall();
-		// testRgb();
+		presentHall();
+		rgbInit();
+		initInternalLed();
+		lightSleepInit();
     	DHT11_init(GPIO_NUM_23);
+
 		// Initialize the NVS
 		esp_err_t ret = nvs_flash_init();
 		if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -190,6 +83,10 @@ void app_main(void){
 		connectionMQTTSemaphore = xSemaphoreCreateBinary();
 		wifiStart();
 
+		// xTaskCreate(&presentHall, "Apresenta o Hall", 4096, NULL, 1, NULL);
+
+		// xTaskCreate(&led_blink,  "Blink", 512, NULL, 5, NULL);
 		xTaskCreate(&connectedWifi,  "Conexão ao MQTT", 4096, NULL, 1, NULL);
 		xTaskCreate(&handleServerConnection, "Comunicação com Broker", 4096, NULL, 1, NULL);
+
 }
