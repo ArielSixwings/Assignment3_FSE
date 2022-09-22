@@ -92,3 +92,4 @@ Em seguida, é preciso escolher a opção de **Configuração de Modo Bateria**,
 
 ## Vídeo
 
+https://youtu.be/QtnTcDrlM48
