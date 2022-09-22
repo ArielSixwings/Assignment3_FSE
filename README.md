@@ -9,11 +9,21 @@
 
 ## Objetivos
 
-O objetivo deste trabalho é criar sensores e atuadores distribuídos baseados nos microcontroladores ESP32 interconectados via Wifi através do protocolo MQTT, podendo ser aplicada em diversos contextos de automação a exemplo das áreas de Automação Residencial, Predial ou Industrial.
+O objetivo deste trabalho é criar sensores e atuadores distribuídos baseados nos microcontroladores ESP32 interconectados via Wifi através do protocolo MQTT, com o estado do sistema salvo e recuperado através de nvs, podendo ser aplicada em diversos contextos de automação a exemplo das áreas de Automação Residencial, Predial ou Industrial.
 
 Os microcontroladores ESP32 irão controlar a aquisição de dados de sensores, botões e chaves e acionar saídas como leds, dentre outras. Haverão dois modos de operação dos dispositivos: modo **energia** que representa o dispositivo ligado à tomada e modo **bateria** que representa o dispositivo que deverá operar em modo de baixo consumo.
 
 Toda a comunicação será feita via rede Wifi com o protocolo MQTT e será provido um servidor central para cadastro e controle dos dispositivos através da plataforma [Thingsboard](https://thingsboard.io).
+
+
+## Componentes do sistema
+
+![Sistema completo](./images/sistemaFisico.jpeg)
+
+- **Esp-32**
+- **Led RGB 5mm(Hw-479)**
+- **Sensor de efeito hall analogico**
+- **Sensor de temperatura e humidade(DHT-11)**
 
 
 ## Recursos utilizados
