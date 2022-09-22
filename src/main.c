@@ -23,18 +23,6 @@ xSemaphoreHandle connectionMQTTSemaphore;
 
 #define LED_PIN 2
 
-void led_blink(){
-	gpio_pad_select_gpio(LED_PIN);
-	gpio_set_direction(LED_PIN,GPIO_MODE_OUTPUT);
-
-	while (1){
-		gpio_set_level(LED_PIN,0);
-		vTaskDelay(1000/portTICK_RATE_MS);
-		gpio_set_level(LED_PIN,1);
-		vTaskDelay(1000/portTICK_RATE_MS);
-	}
-}
-
 void connectedWifi(void * params){
 	while(true){
 		if(xSemaphoreTake(connectionWifiSemaphore, portMAX_DELAY)){
@@ -95,6 +83,7 @@ void getLastState(){
 	getGlobal(GRed, GGreen, GBlue);
 
 }
+
 void app_main(void){
 	// Initialize the NVS
 	esp_err_t ret = nvs_flash_init();
@@ -115,8 +104,6 @@ void app_main(void){
 	wifiStart();
 
 	// xTaskCreate(&presentHall, "Apresenta o Hall", 4096, NULL, 1, NULL);
-
-	// xTaskCreate(&led_blink,  "Blink", 512, NULL, 5, NULL);
 	xTaskCreate(&connectedWifi,  "Conexão ao MQTT", 4096, NULL, 1, NULL);
 	xTaskCreate(&handleServerConnection, "Comunicação com Broker", 4096, NULL, 1, NULL);
 
